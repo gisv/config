@@ -1,0 +1,106 @@
+(require 'package)
+(push '("melpa" . "http://melpa.milkbox.net/packages/")
+      package-archives)
+(package-initialize)
+
+;;display Visited File's Path in the Frame Title
+(setq frame-title-format
+      '((:eval (if (buffer-file-name)
+		   (abbreviate-file-name (buffer-file-name))
+		 "%b"))))
+
+;;(menu-bar-mode -1)
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+(menu-bar-mode -1)
+
+;;ido-mode configurations
+(ido-mode 1)
+
+;;Turn off alarms completely
+(setq ring-bell-function 'ignore)
+
+;;Indent Region or Buffer
+(defun indent-buffer ()
+  "Indent the currently visited buffer."
+  (interactive)
+  (indent-region (point-min) (point-max)))
+
+(defun indent-region-or-buffer ()
+  "Indent a region if selected, otherwise the whole buffer."
+  (interactive)
+  (save-excursion
+    (if (region-active-p)
+	(progn
+	  (indent-region (region-beginning) (region-end))
+	  (message "Indented selected region."))
+      (progn
+	(indent-buffer)
+	(message "Indented buffer.")))))
+(global-set-key (kbd "C-M-\\") 'indent-region-or-buffer)
+
+;;DeleteSelectionMode
+(delete-selection-mode 1)
+
+;;yesornop settings
+(defalias 'yes-or-no-p 'y-or-n-p)
+
+;;electric-pair-mode settings
+(electric-pair-mode 1)
+
+;;tramp settings
+(setq tramp-default-method "ssh")
+
+;;xterm-title settings
+(defun xterm-title-update ()
+  (interactive)
+  (send-string-to-terminal (concat "\033]1; " (buffer-name) "\007"))
+  (if buffer-file-name
+      (send-string-to-terminal (concat "\033]2; " (buffer-file-name) "\007"))
+    (send-string-to-terminal (concat "\033]2; " (buffer-name) "\007"))))
+
+(add-hook 'post-command-hook 'xterm-title-update)
+
+;;;
+;; Move to beginning of word before yanking word in isearch-mode.
+;; Make C-s C-w and C-r C-w act like Vim's g* and g#, keeping Emacs'
+;; C-s C-w [C-w] [C-w]... behaviour.
+(require 'thingatpt)
+(defun my-isearch-yank-word-or-char-from-beginning ()
+  "Move to beginning of word before yanking word in isearch-mode."
+  (interactive)
+  ;; Making this work after a search string is entered by user
+  ;; is too hard to do, so work only when search string is empty.
+  (if (= 0 (length isearch-string))
+      (beginning-of-thing 'word))
+  (isearch-yank-word-or-char)
+  ;; Revert to 'isearch-yank-word-or-char for subsequent calls
+  (substitute-key-definition 'my-isearch-yank-word-or-char-from-beginning
+			     'isearch-yank-word-or-char
+			     isearch-mode-map))
+
+(add-hook 'isearch-mode-hook
+	  (lambda ()
+	    "Activate my customized Isearch word yank command."
+	    (substitute-key-definition 'isearch-yank-word-or-char
+				       'my-isearch-yank-word-or-char-from-beginning
+				       isearch-mode-map)))
+
+;;;above is the settings before packages install.
+
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   (quote
+    ("8db4b03b9ae654d4a57804286eb3e332725c84d7cdab38463cb6b97d5762ad26" default)))
+ '(scroll-preserve-screen-position t)
+ '(tramp-verbose 10))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
